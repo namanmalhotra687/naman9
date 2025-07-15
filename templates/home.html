@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>📋 Naman TaskBoard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body class="bg-light text-dark">
+
+  <!-- Header -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary px-4">
+    <a class="navbar-brand" href="#">📋 Naman TaskBoard</a>
+    <div class="ms-auto">
+      <a href="/logout" class="btn btn-warning">🔓 Logout</a>
+    </div>
+  </nav>
+
+  <div class="container my-4">
+
+    <!-- Add Task Form -->
+    <div class="card mb-4">
+      <div class="card-header"><b>➕ Add New Task</b></div>
+      <div class="card-body">
+        <form method="post" action="/add">
+          <div class="row g-3">
+            <div class="col-md-3">
+              <input type="text" name="title" class="form-control" placeholder="🖊️ Title" required>
+            </div>
+            <div class="col-md-3">
+              <input type="text" name="description" class="form-control" placeholder="📄 Description" required>
+            </div>
+            <div class="col-md-2">
+              <input type="text" name="username" class="form-control" placeholder="👤 Username" required>
+            </div>
+            <div class="col-md-2">
+              <input type="date" name="deadline" class="form-control">
+            </div>
+            <div class="col-md-2">
+              <button type="submit" class="btn btn-primary w-100">Submit</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Items Table -->
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <b>📚 Items List</b>
+        <a href="/export" class="btn btn-success btn-sm">⬇️ Export CSV</a>
+      </div>
+      <div class="card-body">
+        <table class="table table-bordered align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Title</th>
+              <th>Description</th>
+              <th>Username</th>
+              <th>Status</th>
+              <th>Deadline</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+            <tr data-id="{{ item.id }}">
+              <td><input type="text" value="{{ item.title }}" class="form-control" disabled></td>
+              <td><input type="text" value="{{ item.description }}" class="form-control" disabled></td>
+              <td><input type="text" value="{{ item.username }}" class="form-control" disabled></td>
+
+              <!-- Status Dropdown -->
+              <td>
+                <select class="form-select status">
+                  <option value="New" {% if item.status == 'New' %}selected{% endif %}>New</option>
+                  <option value="In Progress" {% if item.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                  <option value="Done" {% if item.status == 'Done' %}selected{% endif %}>Done</option>
+                </select>
+              </td>
+
+              <!-- Deadline Input -->
+              <td>
+                <input type="date" class="form-control deadline" name="deadline" value="{{ item.deadline }}">
+              </td>
+
+              <!-- Action Buttons -->
+              <td>
+                <button class="btn btn-success btn-save"><i class="bi bi-save"></i></button>
+                <a href="/delete/{{ item.id }}" class="btn btn-danger"><i class="bi bi-trash"></i></a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Save JS -->
+  <script>
+    document.querySelectorAll(".btn-save").forEach(btn => {
+      btn.addEventListener("click", async function () {
+        const row = this.closest("tr");
+        const itemId = row.dataset.id;
+
+        const status = row.querySelector(".status").value;
+        const deadline = row.querySelector(".deadline").value;
+
+        try {
+          const response = await fetch(`/edit-json/${itemId}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              status: status,
+              deadline: deadline
+            }),
+          });
+
+          if (response.ok) {
+            alert("✅ Task updated successfully!");
+          } else {
+            alert("❌ Failed to update task.");
+          }
+        } catch (error) {
+          alert("⚠️ Error: " + error.message);
+        }
+      });
+    });
+  </script>
+
+  <!-- Auto Logout Script -->
+  <script>
+    let timeout = 10 * 60 * 1000; // 10 minutes
+    let timer = setTimeout(() => {
+      alert("🔒 Auto-logged out due to inactivity.");
+      window.location.href = "/logout";
+    }, timeout);
+
+    document.onclick = document.onmousemove = document.onkeypress = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        alert("🔒 Auto-logged out due to inactivity.");
+        window.location.href = "/logout";
+      }, timeout);
+    };
+  </script>
+
+</body>
+</html>

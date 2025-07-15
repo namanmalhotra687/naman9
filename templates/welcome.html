@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-gradient-to-br from-indigo-700 to-purple-700 min-h-screen flex items-center justify-center text-white">
+<head>
+  <meta charset="UTF-8">
+  <title>👋 Welcome | Naman TaskBoard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes fadeInUp {
+      0% {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fadeInUp {
+      animation: fadeInUp 0.8s ease-out forwards;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="text-center p-10 bg-white rounded-2xl shadow-xl text-gray-900 max-w-lg w-full animate-fadeInUp">
+    <h1 class="text-3xl font-extrabold mb-4">🎉 Welcome, {{ request.session.get('user') }}!</h1>
+    <p class="text-lg mb-6">You've successfully logged in to <strong class="text-indigo-600">Naman TaskBoard</strong>.</p>
+
+    <a href="/home" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-lg shadow transition">
+      🚀 Go to Dashboard
+    </a>
+
+    <p class="mt-6 text-sm text-gray-500">Not you? <a href="/logout" class="text-red-500 hover:underline">Logout</a></p>
+  </div>
+<script>
+  let timeout = 10 * 60 * 1000; // 10 mins
+  let timer = setTimeout(() => {
+    alert("🔒 Auto-logged out due to inactivity.");
+    window.location.href = "/logout";
+  }, timeout);
+
+  document.onclick = document.onmousemove = document.onkeypress = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      alert("🔒 Auto-logged out due to inactivity.");
+      window.location.href = "/logout";
+    }, timeout);
+  };
+</script>
+</body>
+</html>
