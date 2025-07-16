@@ -1,59 +1,56 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>📊 Task Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <title>📊 Task Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body class="bg-light text-dark">
-    <div class="container my-5">
-        <h2 class="text-center mb-4">📊 Task Status Dashboard</h2>
-        <canvas id="statusChart" height="150"></canvas>
-        <div class="mt-4 text-center">
-            <a href="/home" class="btn btn-primary">← Back to TaskBoard</a>
-        </div>
+<body class="bg-light">
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-dark bg-primary px-4">
+    <a class="navbar-brand text-white">📊 Task Dashboard</a>
+    <div class="ms-auto">
+      <a href="/home" class="btn btn-light">🏠 Back to Home</a>
     </div>
+  </nav>
 
-    <!-- JINJA variables stored safely in data-* attributes -->
-    <div id="statusData"
-         data-new="{{ status_counts['New'] }}"
-         data-progress="{{ status_counts['In Progress'] }}"
-         data-done="{{ status_counts['Done'] }}">
+  <div class="container my-5">
+    <h3 class="mb-4 text-center">📌 Task Status Breakdown</h3>
+
+    <div class="card p-4 shadow-sm">
+      <canvas id="statusChart" height="100"></canvas>
     </div>
+  </div>
 
-    <script>
-        const dataDiv = document.getElementById('statusData');
-        const newCount = parseInt(dataDiv.getAttribute('data-new'));
-        const inProgressCount = parseInt(dataDiv.getAttribute('data-progress'));
-        const doneCount = parseInt(dataDiv.getAttribute('data-done'));
+  <!-- Chart Script (no JS errors) -->
+  <script>
+    const labels = JSON.parse('{{ labels | tojson | safe }}');
+    const data = JSON.parse('{{ values | tojson | safe }}');
 
-        const ctx = document.getElementById('statusChart').getContext('2d');
-        const chart = new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: ['New', 'In Progress', 'Done'],
-                datasets: [{
-                    label: 'Task Status',
-                    data: [newCount, inProgressCount, doneCount],
-                    backgroundColor: ['#0dcaf0', '#ffc107', '#198754']
-                }]
-            }
-        });
-    </script>
-    <script>
-  let timeout = 10 * 60 * 1000; // 10 mins
-  let timer = setTimeout(() => {
-    alert("🔒 Auto-logged out due to inactivity.");
-    window.location.href = "/logout";
-  }, timeout);
+    const ctx = document.getElementById('statusChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Task Count',
+          data: data,
+          backgroundColor: ['#0d6efd', '#ffc107', '#198754']
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom'
+          }
+        }
+      }
+    });
+  </script>
 
-  document.onclick = document.onmousemove = document.onkeypress = () => {
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      alert("🔒 Auto-logged out due to inactivity.");
-      window.location.href = "/logout";
-    }, timeout);
-  };
-</script>
 </body>
 </html>

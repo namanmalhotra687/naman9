@@ -5,10 +5,11 @@
   <title>📋 Naman TaskBoard</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-light text-dark">
 
-  <!-- Header -->
+  <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-primary px-4">
     <a class="navbar-brand" href="#">📋 Naman TaskBoard</a>
     <div class="ms-auto">
@@ -18,7 +19,24 @@
 
   <div class="container my-4">
 
-    <!-- Add Task Form -->
+<!-- Task Status Overview Chart -->
+<div class="card mb-4">
+    <div class="card-header"><i class="bi bi-bar-chart-line"></i> Task Status Overview</div>
+    <div class="card-body text-center">
+        <canvas id="statusChart" style="max-width: 2000px; height: 0px;"></canvas>
+    </div>
+</div>
+
+<!-- Tasks by Category Chart -->
+<div class="card mb-4">
+    <div class="card-header"><i class="bi bi-folder2-open"></i> Tasks by Category</div>
+    <div class="card-body text-center">
+        <canvas id="categoryChart" style="max-width: 2000px; height: -200px;"></canvas>
+    </div>
+</div>
+
+
+    <!-- Add Task -->
     <div class="card mb-4">
       <div class="card-header"><b>➕ Add New Task</b></div>
       <div class="card-body">
@@ -44,7 +62,7 @@
       </div>
     </div>
 
-    <!-- Items Table -->
+    <!-- Task Table -->
     <div class="card">
       <div class="card-header d-flex justify-content-between align-items-center">
         <b>📚 Items List</b>
@@ -68,8 +86,6 @@
               <td><input type="text" value="{{ item.title }}" class="form-control" disabled></td>
               <td><input type="text" value="{{ item.description }}" class="form-control" disabled></td>
               <td><input type="text" value="{{ item.username }}" class="form-control" disabled></td>
-
-              <!-- Status Dropdown -->
               <td>
                 <select class="form-select status">
                   <option value="New" {% if item.status == 'New' %}selected{% endif %}>New</option>
@@ -77,15 +93,10 @@
                   <option value="Done" {% if item.status == 'Done' %}selected{% endif %}>Done</option>
                 </select>
               </td>
-
-              <!-- Deadline Input -->
-              <td>
-                <input type="date" class="form-control deadline" name="deadline" value="{{ item.deadline }}">
-              </td>
-
-              <!-- Action Buttons -->
+              <td><input type="date" class="form-control deadline" name="deadline" value="{{ item.deadline }}"></td>
               <td>
                 <button class="btn btn-success btn-save"><i class="bi bi-save"></i></button>
+                <a href="/edit/{{ item.id }}" class="btn btn-info"><i class="bi bi-pencil-square"></i></a>
                 <a href="/delete/{{ item.id }}" class="btn btn-danger"><i class="bi bi-trash"></i></a>
               </td>
             </tr>
@@ -96,26 +107,27 @@
     </div>
   </div>
 
-  <!-- Save JS -->
+  <!-- JSON Chart Data (Cleaned) -->
+  <script>
+    const labels = {{ labels | default([]) | tojson }};
+    const values = {{ values | default([]) | tojson }};
+</script>
+
+
+  <!-- Save via JSON -->
   <script>
     document.querySelectorAll(".btn-save").forEach(btn => {
       btn.addEventListener("click", async function () {
         const row = this.closest("tr");
         const itemId = row.dataset.id;
-
         const status = row.querySelector(".status").value;
         const deadline = row.querySelector(".deadline").value;
 
         try {
           const response = await fetch(`/edit-json/${itemId}`, {
             method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              status: status,
-              deadline: deadline
-            }),
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status, deadline })
           });
 
           if (response.ok) {
@@ -130,9 +142,9 @@
     });
   </script>
 
-  <!-- Auto Logout Script -->
+  <!-- Auto Logout -->
   <script>
-    let timeout = 10 * 60 * 1000; // 10 minutes
+    let timeout = 10 * 60 * 1000;
     let timer = setTimeout(() => {
       alert("🔒 Auto-logged out due to inactivity.");
       window.location.href = "/logout";
@@ -146,6 +158,106 @@
       }, timeout);
     };
   </script>
+
+  <!-- Chart.js Visualization -->
+  <script>
+    const chartData = JSON.parse(document.getElementById("chart-data").textContent);
+
+    new Chart(document.getElementById('statusChart').getContext('2d'), {
+      type: 'pie',
+      data: {
+        labels: ['Completed', 'Pending', 'Overdue'],
+        datasets: [{
+          data: [chartData.completed, chartData.pending, chartData.overdue],
+          backgroundColor: ['#28a745', '#ffc107', '#dc3545']
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false
+      }
+    });
+
+    new Chart(document.getElementById('categoryChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: chartData.categories,
+        datasets: [{
+          label: 'Tasks per Category',
+          data: chartData.category_counts,
+          backgroundColor: 'rgba(54, 162, 235, 0.7)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+  </script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const statusLabels = {{ labels | default([]) | tojson }};
+    const statusValues = {{ values | default([]) | tojson }};
+
+    const ctx1 = document.getElementById('statusChart');
+    if (ctx1) {
+        new Chart(ctx1, {
+            type: 'pie',
+            data: {
+                labels: statusLabels,
+                datasets: [{
+                    label: 'Task Status Overview',
+                    data: statusValues,
+                    backgroundColor: ['#f87171', '#60a5fa', '#34d399'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+</script>
+<script>
+    const catLabels = {{ cat_labels | default([]) | tojson }};
+    const catValues = {{ cat_values | default([]) | tojson }};
+
+    const ctx2 = document.getElementById('categoryChart');
+    if (ctx2) {
+        new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: catLabels,
+                datasets: [{
+                    label: 'Tasks by Category',
+                    data: catValues,
+                    backgroundColor: '#60a5fa',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { precision: 0 }
+                    }
+                }
+            }
+        });
+    }
+</script>
 
 </body>
 </html>

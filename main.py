@@ -224,11 +224,40 @@ def logout(request: Request):
     request.session.clear()
     return RedirectResponse("/login", status_code=303)
 
+from collections import Counter
+from controller import get_all_items
+
+from collections import Counter
+
+from collections import Counter
+
 @app.get("/home", response_class=HTMLResponse)
 def home(request: Request, db=Depends(get_db)):
     if "user" not in request.session:
         return RedirectResponse("/login")
-    return controller.show_home(request, db)
+
+    items = get_all_items(db)
+
+    # Status chart
+    status_counts = Counter([item.status for item in items if item.status])
+    status_labels = list(status_counts.keys())
+    status_values = list(status_counts.values())
+
+    # Category chart
+    category_counts = Counter([item.description for item in items if item.description])
+    category_labels = list(category_counts.keys())
+    category_values = list(category_counts.values())
+
+    return templates.TemplateResponse("home.html", {
+        "request": request,
+        "items": items,
+        "labels": status_labels,
+        "values": status_values,
+        "cat_labels": category_labels,
+        "cat_values": category_values
+    })
+
+
 
 @app.post("/add")
 def add(request: Request, title: str = Form(...), description: str = Form(""), db=Depends(get_db)):
@@ -325,3 +354,30 @@ def export_csv(db=Depends(get_db)):
         writer.writerow([item.id, item.title, item.description, item.username, item.status, item.deadline])
     buffer.seek(0)
     return StreamingResponse(buffer, media_type="text/csv", headers={"Content-Disposition": "attachment; filename=tasks.csv"})
+    from fastapi.responses import HTMLResponse
+from fastapi import Request
+from controller import get_db, get_all_items
+from collections import Counter
+
+@app.get("/dashboard", response_class=HTMLResponse)
+def dashboard(request: Request, db=Depends(get_db)):
+    if "user" not in request.session:
+        return RedirectResponse("/login")
+
+    items = get_all_items(db)
+    status_counts = Counter([item.status for item in items if item.status])
+
+    labels = list(status_counts.keys())
+    values = list(status_counts.values())
+
+    return templates.TemplateResponse("dashboard.html", {
+        "request": request,
+        "labels": labels,
+        "values": values
+    })
+
+from fastapi.responses import RedirectResponse
+
+@app.get("/", include_in_schema=False)
+def root():
+    return RedirectResponse("/login")

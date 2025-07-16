@@ -1,14 +1,27 @@
 # 📋 Naman TaskBoard
 
-A FastAPI-based task manager with:
+A full-featured FastAPI task management app with:
 
-- 🔐 Login/logout
-- 📝 Add/edit/delete tasks
-- 📊 Dashboard (Chart.js)
-- ⚙️ Task generator (/generate)
-- 🔁 Recurring tasks (APScheduler)
-- 🔎 Search/filter
-- ⬇️ Export to CSV
-- 🕒 Auto logout on inactivity
+- 🔐 Login/logout (session-based)
+- 📝 Add/Edit/Delete tasks
+- ⚙️ Task generator with `/generate`
+- 🔁 Recurring daily task generation (APScheduler)
+- 📊 Dashboard with Chart.js (`/dashboard`)
+- 🔍 Search & filter tasks
+- ⬇️ Export to CSV (`/export`)
+- 🕒 Auto logout after 10 minutes of inactivity
 
-🚀 Built with FastAPI, Jinja2, Bootstrap 5
+## 🌐 Live App
+**URL:** [https://naman9.onrender.com](https://naman9.onrender.com)
+
+## 👨‍💻 Login Credentials
+| Username | Password |
+|----------|----------|
+| `admin`  | `123`    |
+| `naman`  | `123`    |
+
+## 🚀 Deployment
+This app is deployed on **Render.com** and automatically runs with:
+
+```bash
+uvicorn main:app --host 0.0.0.0 --port 10000

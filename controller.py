@@ -143,9 +143,37 @@ def get_db():
     finally:
         db.close()
 
+from fastapi import Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from sqlalchemy.orm import Session
+from model import Item
+
+templates = Jinja2Templates(directory="templates")
+
 def show_home(request: Request, db: Session):
     items = db.query(Item).all()
-    return templates.TemplateResponse("home.html", {"request": request, "items": items})
+
+    # 🧠 Compute task counts
+    completed = sum(1 for i in items if i.status == "Done")
+    pending = sum(1 for i in items if i.status in ("New", "In Progress"))
+    overdue = sum(1 for i in items if i.status != "Done" and i.deadline and i.deadline < date.today())
+
+    # 🧠 Compute categories
+    categories = list(set(item.description for item in items if item.description))
+    category_counts = [sum(1 for item in items if item.description == cat) for cat in categories]
+
+    return templates.TemplateResponse("home.html", {
+        "request": request,
+        "items": items,
+        "completed_tasks": completed or 0,
+        "pending_tasks": pending or 0,
+        "overdue_tasks": overdue or 0,
+        "categories": categories or [],
+        "category_counts": category_counts or []
+    })
+
+
 
 def add_item(title: str, description: str, username: str, db: Session):
     new_item = Item(title=title, description=description, username=username)
