@@ -1,37 +1,44 @@
 from sqlalchemy import Column, Integer, String, Date, Boolean, create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 import os
+from dotenv import load_dotenv
 
-# Use Render Postgres URL or fallback to local SQLite for development
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./test.db")
+load_dotenv()  # Load env vars for local dev
 
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL is not set. Add it to .env or Render env.")
+
+# If hosted on Render, force SSL
+connect_args = {"sslmode": "require"} if "render" in DATABASE_URL else {}
+
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 Base = declarative_base()
 
-class Item(Base):
-    __tablename__ = "tasks"
-
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, nullable=False)
-    description = Column(String, nullable=True)
-    status = Column(String, default="pending")
-    deadline = Column(Date, nullable=True)
-    category = Column(String, nullable=True)
-    completed = Column(Boolean, default=False)
-    generated = Column(Boolean, default=False)
-    recurrence = Column(String, default="none")
-
+# ✅ Define User model
 class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True, nullable=False)
-    password = Column(String, nullable=False)
+    username = Column(String, unique=True, index=True)
+    password = Column(String)
 
-# Database setup
-connect_args = {"sslmode": "require"} if DATABASE_URL.startswith("postgresql") else {}
-engine = create_engine(DATABASE_URL, connect_args=connect_args)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# ✅ Define Item model (task)
+class Item(Base):
+    __tablename__ = "items"
 
-# Create tables
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String)
+    description = Column(String)
+    status = Column(String, default="pending")
+    deadline = Column(Date)
+    created_by = Column(String)
+    is_completed = Column(Boolean, default=False)
+    is_generated = Column(Boolean, default=False)
+    category = Column(String, default="General")
+    recurrence = Column(String, default="none")  # daily/weekly/none
+
+# ✅ Create tables if they don't exist
 Base.metadata.create_all(bind=engine)
