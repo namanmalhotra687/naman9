@@ -382,6 +382,11 @@ from fastapi.responses import RedirectResponse
 def root():
     return RedirectResponse("/login")
 
+@app.get("/sync-check")
+def sync_check():
+    return {"status": "Live version is synced!", "version": "v1.0.3"}
+
+
 import os
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://naman_9db_user:yA0LaygjeYnsCgCXNPBaC3AZILBbvDy2@dpg-d1rmsb15pdvs73eah3m0-a/naman_9db")

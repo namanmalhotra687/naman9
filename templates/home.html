@@ -261,3 +261,45 @@
 
 </body>
 </html>
+
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+    <h2>📋 Task List</h2>
+    <a href="/dashboard" class="btn btn-info">📊 Dashboard</a>
+</div>
+
+<table class="table table-bordered table-hover bg-white shadow-sm">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Deadline</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr>
+            <td>{{ item.id }}</td>
+            <td>{{ item.title }}</td>
+            <td>
+                {% if item.status == "Completed" %}
+                    <span class="badge bg-success">Completed</span>
+                {% elif item.status == "Pending" %}
+                    <span class="badge bg-warning text-dark">Pending</span>
+                {% else %}
+                    <span class="badge bg-secondary">{{ item.status }}</span>
+                {% endif %}
+            </td>
+            <td>{{ item.deadline }}</td>
+            <td>
+                <a href="/edit/{{ item.id }}" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a>
+                <a href="/delete/{{ item.id }}" class="btn btn-sm btn-danger"><i class="fas fa-trash-alt"></i></a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

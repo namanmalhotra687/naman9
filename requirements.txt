@@ -1,13 +1,10 @@
 fastapi
 uvicorn
-jinja2
 sqlalchemy
-psycopg2-binary
-python-multipart
-pydantic
-itsdangerous
-python-dotenv
+jinja2
 passlib
-requests
+python-multipart
 email-validator
+python-dotenv
 apscheduler
+psycopg2-binary
